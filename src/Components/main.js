@@ -3,24 +3,42 @@ import 'bootstrap/dist/css/bootstrap.css';
 
 const Calculator = () => {
   const [inputNumber, setInputNumber] = useState("");
-  const [wynik1, setWynik1] = useState(null);
-  const [wynik2, setWynik2] = useState(null);
+  const [operations, setOperations] = useState(["", "", ""]);
+  const [results, setResults] = useState([]);
+
+  const percentages = {
+    "23%": 0.23,
+    "19%": 0.19,
+    "4.5%": 0.045,
+  };
 
   const calculate = () => {
     const num = parseFloat(inputNumber);
     if (isNaN(num)) return;
 
-    const afterVat = num - num * 0.23;
-    const after19 = afterVat - afterVat * 0.19;
+    let currentResult = num;
+    const tempResults = [];
 
-    setWynik1(afterVat.toFixed(2));
-    setWynik2(after19.toFixed(2));
+    operations.forEach((op) => {
+      if (percentages[op] !== undefined) {
+        currentResult -= currentResult * percentages[op];
+        tempResults.push({ label: op, value: currentResult.toFixed(2) });
+      }
+    });
+
+    setResults(tempResults);
   };
 
   const reset = () => {
     setInputNumber("");
-    setWynik1(null);
-    setWynik2(null);
+    setOperations(["", "", ""]);
+    setResults([]);
+  };
+
+  const handleOperationChange = (index, value) => {
+    const newOperations = [...operations];
+    newOperations[index] = value;
+    setOperations(newOperations);
   };
 
   return (
@@ -37,6 +55,20 @@ const Calculator = () => {
           onKeyDown={(e) => e.key === "Enter" && calculate()}
         />
 
+        {operations.map((op, i) => (
+          <select
+            key={i}
+            className="form-select mb-2"
+            value={operations[i]}
+            onChange={(e) => handleOperationChange(i, e.target.value)}
+          >
+            <option value="">Brak operacji</option>
+            <option value="23%">23%</option>
+            <option value="19%">19%</option>
+            <option value="4.5%">4.5%</option>
+          </select>
+        ))}
+
         <div className="d-flex justify-content-between mb-4">
           <button type="button" className="btn btn-primary w-50 me-2" onClick={calculate}>
             OBLICZ
@@ -46,12 +78,22 @@ const Calculator = () => {
           </button>
         </div>
 
-        {wynik1 !== null && (
+        {results.length > 0 && (
           <div className="alert alert-secondary text-black">
-            <p className="mb-2">Cena po odjęciu <b>VAT-u (23%)</b>:</p>
-            <h4 className="mb-3">{wynik1} zł</h4>
-            <p className="mb-2">Cena po odjęciu <b>19%</b> z poprzedniego wyniku:</p>
-            <h4>{wynik2} zł</h4>
+            {results.map((res, i) => (
+              <div key={i} className="mb-3">
+                <p className="mb-1">Po odjęciu <b>{res.label}</b>:</p>
+                <h4
+                  className="mb-0"
+                  style={{
+                    fontWeight: "bold",
+                    color: i === results.length - 1 ? "green" : "black",
+                  }}
+                >
+                  {res.value} zł
+                </h4>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -60,3 +102,4 @@ const Calculator = () => {
 };
 
 export default Calculator;
+
